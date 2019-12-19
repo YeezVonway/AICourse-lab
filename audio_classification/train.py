@@ -96,6 +96,7 @@ def train(cfg = CONFIG.GLOBAL, modelType = 'ReSENetWav', rnd = 1, logFile = None
   print(f'完成总计{rnd}轮训练')
 
 if __name__ == "__main__":
-  train(rnd = 5, logFile = './trainlog.log')
+  CONFIG.global_config("TRAIN.LR", 1e-6)
+  train(rnd = 50, modelType = 'ReSENetWav', logFile = './trainlog.log')
 
     

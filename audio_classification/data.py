@@ -102,11 +102,11 @@ class WavDataset(BasicDataset):
 
 class MelDataset(WavDataset):
   '''
-  音频帧原始波形数据的数据集  \n
+  音频帧梅尔频谱数据的数据集  \n
   ------
   batch格式: (batch_size * C *L) 张量
   + batch_size: 批样本数
-  + C: 特征的通道数，即帧长度
+  + C: 特征的通道数，即梅尔滤波器个数
   + L: 每个样本的长度，即帧个数
   '''
 
@@ -164,3 +164,4 @@ def pack_dataset(cfg = CONFIG.GLOBAL):
   utils.pack(cfg.FILE.TRAIN_WAV, cfg.FILE.TRAIN_PKG, cfg.DATA.SR)
   utils.pack(cfg.FILE.TEST_WAV, cfg.FILE.TEST_PKG, cfg.DATA.SR)
   print("数据集已打包")
+

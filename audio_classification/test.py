@@ -11,7 +11,8 @@ import models
 import data
 from utils.log import Log
 
-def get_testData(cfg = CONFIG.GLOBAL):
+
+def get_testData(cfg=CONFIG.GLOBAL):
   '''
   依据配置，获得数据集和loader  \n
   -------

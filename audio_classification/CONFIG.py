@@ -2,7 +2,7 @@ from easydict import EasyDict as edict
 import os
 
 GLOBAL = edict()
-GLOBAL.DEVICE = 'cuda'          #高性能计算设备
+GLOBAL.DEVICE = 'cuda'          # 高性能计算设备
 
 ## ..数据格式配置 ##
 
@@ -10,9 +10,9 @@ GLOBAL.DATA = edict()
 
 ## ....数据表示格式 ##
 
-GLOBAL.DATA.SR = 11050              # 采样率
+GLOBAL.DATA.SR = 22050              # 采样率
 GLOBAL.DATA.FRAME_SIZE = 256       # 每帧的长度
-GLOBAL.DATA.NUM_FRAMES = 256       # 每个样本的帧的个数
+GLOBAL.DATA.NUM_FRAMES = 512       # 每个样本的帧的个数
 GLOBAL.DATA.USE_MEL = False          # 使用梅尔频谱
 GLOBAL.DATA.IN_CHANNELS = None      # 每个样本特征点的通道数（由其它参数确定）
 
@@ -58,10 +58,10 @@ GLOBAL.FILE.TRAIN_PKG = '.\\data\\trainset.pkg'  # 训练集打包文件
 GLOBAL.FILE.TEST_PKG = '.\\data\\testset.pkg'    # 测试集打包文件
 GLOBAL.FILE.MODELS = {   # key = 模型类型, value = 模型保存的路径
   'ReSENetWav' : '.\\models\\ReSE_Wav',
-  'ReSENetMel' : '.\\models\\ReSE_Mel'
+  # 'ReSENetMel' : '.\\models\\ReSE_Mel', # 算力不足，弃用
+  'GoogLeNet' : '.\\models\\GoogLeNet'
   }
-
-GLOBAL.FILE.RESE_MEL = '.\\models\\ReSE_Mel'  # 保存ReSEWav模型的路径
+GLOBAL.FILE.EVAL_MODEL = 'ReSENetWav'  # 进行预测的模型
 
 ## 配置相关的工具函数 ##
 
@@ -76,6 +76,8 @@ def update():
     GLOBAL.DATA.IN_CHANNELS = GLOBAL.DATA.MEL.BIN
   else:
     GLOBAL.DATA.IN_CHANNELS = GLOBAL.DATA.FRAME_SIZE
+  if(GLOBAL.FILE.EVAL_MODEL not in GLOBAL.FILE.MODELS):
+    raise ValueError("用于预测的模型未定义")
 
 def get_classes_from_trainset():
   '''
@@ -85,7 +87,7 @@ def get_classes_from_trainset():
   nums = [len(os.listdir(f"{GLOBAL.FILE.TRAIN_WAV}\\{name}")) 
     for name in names]
   num_total = sum(nums)
-  GLOBAL.DATA.CLASSES = [(name, num/num_total) 
+  GLOBAL.DATA.CLASSES = [(name, num_total/num) \
     for name, num in zip(names, nums)]
 
 def global_config(name: str, value):
