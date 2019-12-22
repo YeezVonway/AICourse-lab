@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as nnf
 
-import CONFIG
+import audio_classification.CONFIG as CONFIG
 
 class Loss(nn.Module):
   '''

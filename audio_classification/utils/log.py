@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import pickle
 
+
 class Log():
   '''
   训练和测试的日志输出工具。能够添加记录、保存到文件、打印图表。
@@ -104,15 +105,15 @@ class Log():
 
   @staticmethod
   def load(path):
+
     '''
     从指定路径读取log
     '''
-  
+    
     with open(path, 'rb') as f:
-      log = pickle.load(f)
+      log: Log = pickle.load(f)
 
     if type(log) is not Log:
       raise TypeError("不是日志文件")
-
+    
     return log
-

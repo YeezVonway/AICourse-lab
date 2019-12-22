@@ -11,10 +11,15 @@ GLOBAL.DATA = edict()
 ## ....数据表示格式 ##
 
 GLOBAL.DATA.SR = 22050              # 采样率
-GLOBAL.DATA.FRAME_SIZE = 256       # 每帧的长度
-GLOBAL.DATA.NUM_FRAMES = 512       # 每个样本的帧的个数
+GLOBAL.DATA.FRAME_SIZE = 128      # 每帧的长度
+GLOBAL.DATA.NUM_FRAMES = 1024       # 每个样本的帧的个数
 GLOBAL.DATA.USE_MEL = False          # 使用梅尔频谱
-GLOBAL.DATA.IN_CHANNELS = None      # 每个样本特征点的通道数（由其它参数确定）
+GLOBAL.DATA.ARGUMENTATION = {    # 数据增强参数, None表示不使用数据增强
+  'noiseStd': 1e-4,
+  'wvScaleRg': 0.2,
+  'tmScaleRg': 0.05,
+  }
+#GLOBAL.DATA.ARGUMENTATION = None
 
 ## ....频谱图配置 ##
 
@@ -27,13 +32,11 @@ GLOBAL.DATA.MEL.SR = None         # 采样率
 
 GLOBAL.DATA.CLASSES = 'ACCORDINGLY' # 类别。包括名称和权重，决定于训练集。
 
-GLOBAL.DATA.NUM_CLASS = None      # 类数，由CLASSES决定
-
 ## ..训练配置 ##
 
 GLOBAL.TRAIN = edict()
 GLOBAL.TRAIN.BATCH_SIZE = 256       # batch size
-GLOBAL.TRAIN.NUM_WORKERS = 3      # 训练时，数据获取的进程数
+GLOBAL.TRAIN.NUM_WORKERS = 5      # 训练时，数据获取的进程数
 GLOBAL.TRAIN.SHUFFLE = True       # 每次遍历数据集时，是否洗牌
 GLOBAL.TRAIN.LR = 5e-5            # 学习率
 GLOBAL.TRAIN.BETAS = (0.9, 0.99)  # Adam算法中的beta
@@ -46,16 +49,16 @@ GLOBAL.TRAIN.EPSILON = 1e-12      # 防止log爆炸的增值
 
 GLOBAL.TEST = edict()
 GLOBAL.TEST.BATCH_SIZE = 256      # 测试时每批的大小
-GLOBAL.TEST.NUM_WORKERS = 3       # 测试时，数据获取的进程数
+GLOBAL.TEST.NUM_WORKERS = 0       # 测试时，数据获取的进程数
 GLOBAL.TEST.VERBOSE = True        # 为每个样本结果作输出
 
 ## 文件配置 ##
 
 GLOBAL.FILE = edict()
-GLOBAL.FILE.TRAIN_WAV = '.\\data\\train_wav'
-GLOBAL.FILE.TEST_WAV = '.\\data\\test_wav'
-GLOBAL.FILE.TRAIN_PKG = '.\\data\\trainset.pkg'  # 训练集打包文件
-GLOBAL.FILE.TEST_PKG = '.\\data\\testset.pkg'    # 测试集打包文件
+GLOBAL.FILE.TRAIN_WAV = 'data\\train_wav'
+GLOBAL.FILE.TEST_WAV = 'data\\test_wav'
+GLOBAL.FILE.TRAIN_PKG = 'data\\trainset.pkg'  # 训练集打包文件
+GLOBAL.FILE.TEST_PKG = 'data\\testset.pkg'    # 测试集打包文件
 GLOBAL.FILE.MODELS = {   # key = 模型类型, value = 模型保存的路径
   'ReSENetWav' : '.\\models\\ReSE_Wav',
   # 'ReSENetMel' : '.\\models\\ReSE_Mel', # 算力不足，弃用
@@ -65,49 +68,47 @@ GLOBAL.FILE.EVAL_MODEL = 'ReSENetWav'  # 进行预测的模型
 
 ## 配置相关的工具函数 ##
 
-def update():
+def commit(cfg = GLOBAL):
   '''
-  更新一些由其它参数决定的数值
+  确认提交配置更改
   '''
 
-  GLOBAL.DATA.NUM_CLASS = len(GLOBAL.DATA.CLASSES)
-  GLOBAL.DATA.MEL.SR = GLOBAL.DATA.SR
-  if(GLOBAL.DATA.USE_MEL):
-    GLOBAL.DATA.IN_CHANNELS = GLOBAL.DATA.MEL.BIN
+  cfg.DATA.MEL.SR = cfg.DATA.SR
+  if(cfg.DATA.USE_MEL):
+    cfg.DATA.IN_CHANNELS = cfg.DATA.MEL.BIN
   else:
-    GLOBAL.DATA.IN_CHANNELS = GLOBAL.DATA.FRAME_SIZE
-  if(GLOBAL.FILE.EVAL_MODEL not in GLOBAL.FILE.MODELS):
+    cfg.DATA.IN_CHANNELS = cfg.DATA.FRAME_SIZE
+  if(cfg.FILE.EVAL_MODEL not in cfg.FILE.MODELS):
     raise ValueError("用于预测的模型未定义")
+  
+  if cfg.DATA.CLASSES == 'ACCORDINGLY':
+    get_classes_from_trainset(cfg)
+  cfg.DATA.NUM_CLASS = len(cfg.DATA.CLASSES)
 
-def get_classes_from_trainset():
+def get_classes_from_trainset(cfg=GLOBAL):
   '''
-  从训练集文件目录更新GLOBAL.DATA.CLASSES
+  从训练集文件目录更新cfg.DATA.CLASSES
   '''
-  names = os.listdir(GLOBAL.FILE.TRAIN_WAV)
-  nums = [len(os.listdir(f"{GLOBAL.FILE.TRAIN_WAV}\\{name}")) 
+  names = os.listdir(cfg.FILE.TRAIN_WAV)
+  nums = [len(os.listdir(f"{cfg.FILE.TRAIN_WAV}\\{name}")) 
     for name in names]
   num_total = sum(nums)
-  GLOBAL.DATA.CLASSES = [(name, num_total/num) \
+  cfg.DATA.CLASSES = [(name, num_total/num) \
     for name, num in zip(names, nums)]
 
-def global_config(name: str, value):
+def addFileRoot(root='.\\', cfg=GLOBAL):
   '''
-  更改GLOBAL参数配置\n
-  ------
-  + `name`: 参数名称
-  + `value`：数值
-  ------
-  示例：
-  
-  `config('TRAIN.BATCH_SIZE', 128)`
+  为cfg配置的路径进行根转换
   '''
 
-  exec('GLOBAL.' + name +' = '+ str(value))
-  update()
+  if root[-1] not in ('\\', '/'):
+    root += '\\'
+  cfg.FILE.TRAIN_WAV = root + cfg.FILE.TRAIN_WAV
+  cfg.FILE.TEST_WAV = root + cfg.FILE.TEST_WAV
+  cfg.FILE.TRAIN_PKG = root + cfg.FILE.TRAIN_PKG
+  cfg.FILE.TEST_PKG = root + cfg.FILE.TEST_PKG
+  for key, path in cfg.FILE.MODELS.items():
+    cfg.FILE.MODELS[key] =  root + path
 
-## 载入配置例程 ##
 
-if GLOBAL.DATA.CLASSES == 'ACCORDINGLY':
-  get_classes_from_trainset()
-
-update()
+commit()

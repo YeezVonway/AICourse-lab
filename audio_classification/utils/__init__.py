@@ -45,34 +45,31 @@ def pack(dataDir, dst, sr):
     print('完毕')
 
 
-@numba.jit(forceobj = True)
-def get_frames(arr: np.ndarray, cfg: edict):
+@numba.jit
+def get_frames(arr: np.ndarray, fsize, fnum):
   '''
   把波形数组变成指定格式音频波形帧的数组。 
   自动截去过长的部分，不足的部分将自动用0补全  \n
   -------
   参数：
   + `arr`: 输入数组，为音频原波形, 长度为L
-  + `cfg`: 数据的配置对象，可参考CONFIG.GLOBAL.DATA
-      + `cfg.FRAME_SIZE`: 帧的长度
-      + `cfg.NUM_FRAMES`: 帧的个数
+  + `fsize`: 帧的长度
+  + `fnum`: 帧的个数
   -------
   返回值：`(FRAME_SIZE * NUM_FRAMES)数组`
   '''
 
-  fsize = cfg.FRAME_SIZE
-  fnum = cfg.NUM_FRAMES
   need_len = fsize * fnum
-  arr_len = arr.shape[0]
+  arr_len = len(arr)
 
   if arr_len < need_len:
-    arr = np.concatenate([
+    arr = np.concatenate((
       arr, 
       np.zeros((need_len - arr_len,), dtype = np.float32),
-      ] )
-  arr = np.reshape(arr[:need_len], (fnum, fsize)).T
+    ))
+  arr = np.reshape(arr[:need_len], (fnum, fsize))
 
-  return arr
+  return arr.T
 
 def get_mel(arr: np.ndarray, cfg: edict):
   '''
@@ -103,4 +100,30 @@ def get_mel(arr: np.ndarray, cfg: edict):
     
   return np.array(arr_mel).T
 
+@numba.jit
+def data_argumentation(arr: np.array, noiseStd=0.02, wvScaleRg=0.1, tmScaleRg=0.04):
+  '''
+  数据扩充。 \n
+  ------
+  + arr: 原音频波形
+  + noiseStd: 增添的噪音的标准差 与 平均幅值 之比
+  + wvScaleRg: 音量缩放变化范围
+  + tmScaleRg: 对时间缩放变化之范围
+  '''
+  
 
+  noise = np.random.randn(*arr.shape) * noiseStd * np.mean(np.abs(arr))
+  wvScale = 1 + (np.random.rand() * 2 - 1) * wvScaleRg
+  tmScale = 1 + (np.random.rand() * 2 - 1) * tmScaleRg
+
+  arr = arr + noise
+  arr = arr * wvScale
+
+  xp = np.arange(0, len(arr), 1)
+  x = np.arange(0, len(arr), 1/tmScale)
+  arr = np.interp(x, xp, arr)
+
+  return arr
+
+
+  

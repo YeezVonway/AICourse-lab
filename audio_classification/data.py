@@ -1,16 +1,17 @@
-import numpy as np
 import torch
 import torch.utils.data as torchData
 import pickle
 
-import utils
-import CONFIG
+import audio_classification.utils as utils
+import audio_classification.CONFIG as CONFIG
+
 
 class BasicDataset(torchData.Dataset):
   '''
   数据集的基类，不直接产生Batch。  \n
   可以用__getitem__获得元组((filepath, wav), classIdx)
   '''
+  
   def __init__(self, dataPkg: str, device, cfg = CONFIG.GLOBAL): 
     '''
     + dataPkg: 数据文件的路径，可用utils.pack打包得来。
@@ -19,6 +20,7 @@ class BasicDataset(torchData.Dataset):
 
     super(BasicDataset, self).__init__()
     self.cfg = cfg
+    self.dataAgm = cfg.DATA.ARGUMENTATION
     with open(dataPkg, 'rb') as fpkg:
       dataDic: dict = pickle.load(fpkg)
 
@@ -36,7 +38,10 @@ class BasicDataset(torchData.Dataset):
 
   def __getitem__(self, index):
 
-    return self.data[index], self.labels[index]
+    (filePath, wav) = self.data[index]
+    if self.dataAgm is not None:
+      wav = utils.data_argumentation(wav, **self.dataAgm)
+    return (filePath, wav), self.labels[index]
 
   def __len__(self):
 
@@ -65,11 +70,13 @@ class WavDataset(BasicDataset):
     '''
 
     super(WavDataset, self).__init__(dataPkg, cfg)
+    self.fnum = cfg.DATA.NUM_FRAMES
+    self.fsize = cfg.DATA.FRAME_SIZE
 
   def __getitem__(self, index):
     
     (_, wav), clsIdx =  super().__getitem__(index)
-    sample = utils.get_frames(wav, self.cfg.DATA)
+    sample = utils.get_frames(wav, self.fsize, self.fnum)
     return sample, clsIdx
 
   @staticmethod

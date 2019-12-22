@@ -1,17 +1,14 @@
 import torch
-import numpy as np
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.utils.data as torchData
 import os
 
-import CONFIG
-import loss
-import models
-import data
-from utils.log import Log
+import audio_classification.CONFIG as CONFIG
+import audio_classification.loss as loss
+import audio_classification.models as models
+import audio_classification.data as data
+from audio_classification.utils.log import Log
 
-def get_trainData(cfg = CONFIG.GLOBAL):
+
+def get_trainData(cfg=CONFIG.GLOBAL):
   '''
   依据配置，获得数据集和loader  \n
   -------
@@ -95,8 +92,3 @@ def train(cfg = CONFIG.GLOBAL, modelType = 'ReSENetWav', rnd = 1, logFile = None
     log.make_plot()
   print(f'完成总计{rnd}轮训练')
 
-if __name__ == "__main__":
-  CONFIG.global_config("TRAIN.LR", 1e-6)
-  train(rnd = 50, modelType = 'ReSENetWav', logFile = './trainlog.log')
-
-    

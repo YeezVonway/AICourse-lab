@@ -2,13 +2,10 @@ import torch
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
-import os
 
-import utils.DEBUG as dbg
-
-import CONFIG
-from utils.ReSE import ReSEBlock1D
-from utils.GoogleNet import Inception, BasicConv1d
+import audio_classification.CONFIG as CONFIG
+from audio_classification.utils.ReSE import ReSE2MpBnBlock1D
+from audio_classification.utils.GoogleNet import Inception, BasicConv1d
 
 class ReSENetWav(nn.Module):
   '''
@@ -29,72 +26,40 @@ class ReSENetWav(nn.Module):
     
     super().__init__()
 
-    C: int = cfg.DATA.IN_CHANNELS
-    L: int = cfg.DATA.NUM_FRAMES
+    C0: int = cfg.DATA.IN_CHANNELS
+    L0: int = cfg.DATA.NUM_FRAMES
 
-    self.conv1, C = nn.Conv1d(C, 256, 3, 1, 1), 256
-    self.maxpool1, L = nn.MaxPool1d(3, 2, 1), L//2
-    self.rese1 = ReSEBlock1D(C, C//8)
-    self.rese2 = ReSEBlock1D(C, C//8)
-    self.bn1 = nn.BatchNorm1d(C, 1e-8)
-
-    self.conv2, C = nn.Conv1d(C, 256, 3, 1, 1), 256
-    self.maxpool2, L = nn.MaxPool1d(3, 2, 1), L//2
-    self.rese3 = ReSEBlock1D(C, C//8)
-    self.rese4 = ReSEBlock1D(C, C//8)
-    self.bn2 = nn.BatchNorm1d(C, 1e-8)
+    C = [C0, 128, 256, 256, 512, 512]
+    L = [L0, L0//2, L0//4, L0//8, L0//16, L0//32]
     
-    self.conv3, C = nn.Conv1d(C, 512, 3, 1, 1), 512
-    self.maxpool3, L = nn.MaxPool1d(3, 2, 1), L//2
-    self.rese5 = ReSEBlock1D(C, C//16)
-    self.rese6 = ReSEBlock1D(C, C//16)
-    self.bn3 = nn.BatchNorm1d(C, 1e-8)
+    i = 1
+    self.block1 = ReSE2MpBnBlock1D(C[i-1], C[i])
+    i += 1
+    self.block2 = ReSE2MpBnBlock1D(C[i-1], C[i])
+    i += 1
+    self.block3 = ReSE2MpBnBlock1D(C[i-1], C[i])
+    i += 1
+    self.block4 = ReSE2MpBnBlock1D(C[i-1], C[i])
+    i += 1
+    self.block5 = ReSE2MpBnBlock1D(C[i-1], C[i])
+  
+    C = L[i] * C[i]
 
-    self.conv4, C = nn.Conv1d(C, 512, 3, 1, 1), 512
-    self.maxpool4, L = nn.MaxPool1d(3, 2, 1), L//2
-    self.rese7 = ReSEBlock1D(C, C//16)
-    self.rese8 = ReSEBlock1D(C, C//16)
-    self.bn4 = nn.BatchNorm1d(C, 1e-8)
-
-    C = L * C
-
-    self.fc_1, C = nn.Linear(C, 512), 512
-    self.fc_2, C = nn.Linear(C, 512), 512
-    self.fc_3 = nn.Linear(C, cfg.DATA.NUM_CLASS)
+    self.fc_1 = nn.Linear(C, 1024) 
+    self.fc_2 = nn.Linear(1024, cfg.DATA.NUM_CLASS)
     self.sm = nn.Softmax(dim = 1)
 
   def forward(self, X):
     
-    X = torch.relu(self.conv1(X))
-    X = self.maxpool1(X)
-    X = torch.relu(self.rese1(X))
-    X = torch.relu(self.rese2(X))
-    X = self.bn1(X)
-    
-    X = torch.relu(self.conv2(X))
-    X = self.maxpool2(X)
-    X = torch.relu(self.rese3(X))
-    X = torch.relu(self.rese4(X))
-    X = self.bn2(X)
-    
-    X = torch.relu(self.conv3(X))
-    X = self.maxpool3(X)
-    X = torch.relu(self.rese5(X))
-    X = torch.relu(self.rese6(X))
-    X = self.bn3(X)
+    X = self.block1(X)
+    X = self.block2(X)
+    X = self.block3(X)
+    X = self.block4(X)
+    X = self.block5(X)
 
-    X = torch.relu(self.conv4(X))
-    X = self.maxpool4(X)
-    X = torch.relu(self.rese7(X))
-    X = torch.relu(self.rese8(X))
-    X = self.bn4(X)
-
-    X = torch.reshape(X, (X.shape[0], X.shape[1]*X.shape[2]))
-
-    X = torch.relu(self.fc_1(X))
-    X = torch.relu(self.fc_2(X))
-    X = self.fc_3(X)
-
+    X = X.view(X.size(0), -1)
+    X = F.relu(self.fc_1(X))
+    X = self.fc_2(X)
     X = self.sm(X)
 
     return X
@@ -118,59 +83,40 @@ class ReSENetMel(nn.Module):
     
     super().__init__()
 
-    C: int = cfg.DATA.IN_CHANNELS
-    L: int = cfg.DATA.NUM_FRAMES
+    C0: int = cfg.DATA.IN_CHANNELS
+    L0: int = cfg.DATA.NUM_FRAMES
 
-    self.conv1, C = nn.Conv1d(C, 256, 3, 1, 1), 256
-    self.maxpool1, L = nn.MaxPool1d(3, 2, 1), L//2
-    self.rese1 = ReSEBlock1D(C, C//8)
-    self.rese2 = ReSEBlock1D(C, C//8)
-    self.bn1 = nn.BatchNorm1d(C, 1e-8)
+    C = [C0, 64, 64, 128, 128, 256]
+    L = [L0, L0//2, L0//4, L0//8, L0//16, L0//32]
+    
+    i = 1
+    self.block1 = ReSE2MpBnBlock1D(C[i-1], C[i])
+    i += 1
+    self.block2 = ReSE2MpBnBlock1D(C[i-1], C[i])
+    i += 1
+    self.block3 = ReSE2MpBnBlock1D(C[i-1], C[i])
+    i += 1
+    self.block4 = ReSE2MpBnBlock1D(C[i-1], C[i])
+    i += 1
+    self.block5 = ReSE2MpBnBlock1D(C[i-1], C[i])
+  
+    C = L[i] * C[i]
 
-    self.conv2, C = nn.Conv1d(C, 256, 3, 1, 1), 256
-    self.maxpool2, L = nn.MaxPool1d(3, 2, 1), L//2
-    self.rese3 = ReSEBlock1D(C, C//16)
-    self.rese4 = ReSEBlock1D(C, C//16)
-    self.bn2 = nn.BatchNorm1d(C, 1e-8)
-
-    self.conv3, C = nn.Conv1d(C, 512, 3, 1, 1), 512
-    self.maxpool3, L = nn.MaxPool1d(3, 2, 1), L//2
-    self.rese5 = ReSEBlock1D(C, C//16)
-    self.rese6 = ReSEBlock1D(C, C//16)
-    self.bn3 = nn.BatchNorm1d(C, 1e-8)
-
-    C = L * C
-
-    self.fc_1, C = nn.Linear(C, 512), 512
-    self.fc_2, C = nn.Linear(C, 512), 512
-    self.fc_3 = nn.Linear(C, cfg.DATA.NUM_CLASS)
+    self.fc_1 = nn.Linear(C, 512) 
+    self.fc_2 = nn.Linear(512, cfg.DATA.NUM_CLASS)
     self.sm = nn.Softmax(dim = 1)
 
   def forward(self, X):
     
-    X = torch.relu(self.conv1(X))
-    X = self.maxpool1(X)
-    X = torch.relu(self.rese1(X))
-    X = torch.relu(self.rese2(X))
-    X = self.bn1(X)
-    
-    X = torch.relu(self.conv2(X))
-    X = self.maxpool2(X)
-    X = torch.relu(self.rese3(X))
-    X = torch.relu(self.rese4(X))
-    X = self.bn2(X)
+    X = self.block1(X)
+    X = self.block2(X)
+    X = self.block3(X)
+    X = self.block4(X)
+    X = self.block5(X)
 
-    X = torch.relu(self.conv3(X))
-    X = self.maxpool3(X)
-    X = torch.relu(self.rese5(X))
-    X = torch.relu(self.rese6(X))
-    X = self.bn3(X)
-
-    X = torch.reshape(X, (X.shape[0], X.shape[1]*X.shape[2]))
-    X = torch.relu(self.fc_1(X))
-    X = torch.relu(self.fc_2(X))
-    X = self.fc_3(X)
-
+    X = X.view(X.size(0), -1)
+    X = F.relu(self.fc_1(X))
+    X = self.fc_2(X)
     X = self.sm(X)
 
     return X
