@@ -15,9 +15,9 @@ GLOBAL.DATA.FRAME_SIZE = 128      # 每帧的长度
 GLOBAL.DATA.NUM_FRAMES = 1024       # 每个样本的帧的个数
 GLOBAL.DATA.USE_MEL = False          # 使用梅尔频谱
 GLOBAL.DATA.ARGUMENTATION = {    # 数据增强参数, None表示不使用数据增强
-  'noiseStd': 1e-4,
-  'wvScaleRg': 0.2,
-  'tmScaleRg': 0.05,
+  'noiseStd': 1e-3,
+  'wvScaleRg': 0.4,
+  'tmScaleRg': 0.1,
   }
 #GLOBAL.DATA.ARGUMENTATION = None
 

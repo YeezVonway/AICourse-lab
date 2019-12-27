@@ -32,7 +32,7 @@ def toJson(prediction, time_create):
         ac.CONFIG.GLOBAL.DATA.CLASSES[np.argmax(prediction)]
     result['time'] = time_create
     
-    return json.dumps(result)
+    return json.dumps(result).encode('UTF-8')
 
 
 class Service(threading.Thread):
@@ -52,11 +52,25 @@ class Service(threading.Thread):
         self.running = False
         self.port = port
         self.cacheDir = cacheDir
+        self.evaledDir = cacheDir + 'evaled\\'
         self.deleteEvaled = deleteEvaled
         
     def run(self):
 
-        print("服务以部署，等待连接中")
+        # 清除缓存
+        files = os.listdir(self.cacheDir)
+        for fname in files:
+            if fname == "evaled":
+                continue
+            cachedFile = self.cacheDir + fname
+            if self.deleteEvaled:
+                os.remove(cachedFile)
+            else:
+                if(os.path.exists(self.evaledDir + fname)):
+                    os.remove(self.evaledDir + fname)
+                shutil.move(cachedFile, self.evaledDir)
+
+        print("服务已部署，等待连接中")
         handler = easyconn.connectAcpt(self.port)
         recoder = Recorder(self.cacheDir)
         recoder.start()
@@ -73,21 +87,23 @@ class Service(threading.Thread):
                     continue
                 inputFile = self.cacheDir + fname
                 y = None
-                while y is None:  # 反复读取直到成功
-                    # 预测
+                try:  # 预测
                     y = ac.evaluate.eval_file(model, inputFile)
-                    if y is None:  # 不成功
-                        time.sleep(0.1)
-                        print(f"读取{fname}失败，将尝试重新读取。")
-                    if self.terminated:  # 已经被停止
+                except ValueError:
+                    print(f"音频{fname}读取失败")
+                except FileNotFoundError:
+                    print(f"音频{fname}读取失败")
+                    
+
+                if y is not None:
+                    jstr = toJson(y, os.path.getctime(inputFile))
+                    try:
+                        handler.send_data(jstr)
+                    except ConnectionAbortedError:
+                        self.terminated = True
                         break
-                if self.terminated:  # 已经被停止
-                    break
-                
-                jstr = toJson(y, os.path.getctime(inputFile))
-                handler.send_data(jstr)
-                print(f"自{fname}预测: {jstr}")
-                if self.deleteEvaled:
+                    print(f"自{fname}预测: {jstr}")
+                if self.deleteEvaled and os.path.exists(inputFile):
                     os.remove(inputFile)
                 else:
                     if(os.path.exists(self.evaledDir + fname)):
@@ -99,8 +115,7 @@ class Service(threading.Thread):
 
         #  结束
         recoder.terminated = True
-        while(recoder.is_alive()):
-            time.sleep(0.1)
+        recoder.join()
         self.running = False
         handler.con.close()
         del handler

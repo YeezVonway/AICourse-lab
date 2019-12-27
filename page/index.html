@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>家庭守护者</title>
+    <style>
+        .box{
+            width:80%;
+            height:50px;
+            margin:auto;
+            clear: both;
+            text-align: center;
+        }
+        .box>img{
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 50%;
+        }
+
+        .header{
+            width: 80%;
+            margin: 10px auto;
+            background-color: rgba(0, 162, 255, 0.609);
+            font-size: large;
+            color: gold;
+            text-shadow: 0px 5px 10px goldenrod;
+            letter-spacing: 8px;
+            border:1px solid slateblue;            
+            border-radius: 10px / 10px;
+        }
+        .brand{
+            text-align: center;
+        }
+        #left{
+            width: 40%;
+            float: left;
+        }
+        #center{
+            width: 20%;
+            margin-top: 30px;
+            text-align: center;
+            float: left;
+        }
+        #btn{
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            background-color: lightcoral;
+            color:powderblue;
+            font-size:50px;
+            border-radius: 50%;
+            border: none;
+            clear: both;
+            cursor: pointer;
+        }
+        #btn:hover{
+            text-shadow: 0 5px 20px rgb(43, 183, 226);
+            box-shadow: 0 5px 50px rgb(192, 68, 0);
+        }
+        #btn:active{
+            background-color: rgb(178, 90, 205);
+        }
+        #tip{
+            width: 200px;
+            height: auto;
+            color: white;
+            background-color: green;
+            margin: 20px auto;
+            font-size: large;           
+            border-radius: 10px / 10px;
+            cursor: pointer;
+        }
+        #cough{
+            width: 200px;
+            height: auto;
+            color: white;
+            background-color: red;
+            margin: 2px auto;
+            font-size: large;           
+            border-radius: 10px / 10px;
+            border:1px solid burlywood;
+            display: none;
+            cursor: pointer;
+        }
+        #sneeze{
+            width: 200px;
+            height: auto;
+            color: white;
+            background-color: red;
+            margin: 2px auto;
+            font-size: large;           
+            border-radius: 10px / 10px;
+            border:1px solid burlywood;
+            display: none;
+            cursor: pointer;
+        }
+        #scream{
+            width: 200px;
+            height: auto;
+            color: white;
+            background-color: red;
+            margin: 2px auto;
+            font-size: large;           
+            border-radius: 10px / 10px;
+            border:1px solid burlywood;
+            display: none;
+            cursor: pointer;
+        }
+        #tip:active{
+            background: #000000; 
+            opacity: 0.5;  
+        }
+        #right{
+            width: 40%;
+            float: right;
+        }
+        #back{
+            position: absolute;
+            top:1%;
+            left:15%;
+            display: none;
+        }
+        #result{
+            position: absolute;
+            top:5%;
+            left:15%;
+            display: none;
+        }
+		table{
+			border:3px solid teal;
+            text-align: center;
+		}
+		td{
+			border:3px solid teal;
+            background-color: bisque;
+            text-align: center;
+		}
+    </style>
+</head>
+<body>
+    <div id="page">
+        <div class="header">
+            <div class="box">
+                <img src="eye.gif">
+            </div>
+            <h1 class="brand">家庭守护者</h1>
+        </div>
+        <div class="main">
+            <img id="left" src="大白左.jpg">
+            <div id="center">
+                <button id="btn" onclick="Click()">start</button>
+                <div id="tip" onclick="resClick()"></div>
+                <div id="cough" onclick="coughClick()">您的家人咳嗽了！</div>
+                <div id="sneeze" onclick="sneezeClick()">您的家人感冒了！</div>
+                <div id="scream" onclick="screamClick()">您的家人尖叫了！</div>
+            </div>
+            <img id="right" src="大白右.jpg">
+        </div>
+    </div>
+    <div id="back">
+        <button onclick="back()">返回</button>
+    </div>
+    <div id="result"></div>
+    
+    <script>
+        var flag=false;
+        var sum=0,cough_sum=0,sneeze_sum=0,scream_sum=0;
+        var dataset=[];
+        function coughClick(){
+            window.open("https://www.baidu.com/s?wd=%E5%92%B3%E5%97%BD%E6%80%8E%E4%B9%88%E5%8A%9E&rsv_spt=1&rsv_iqid=0xa4999d2d001cbbe2&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=1&rsv_dl=tb&oq=%25E5%2592%25B3%25E5%2597%25BD&inputT=2360&rsv_t=9c9cR%2F78VtVADhDoyQaoP5a3kPiBGtFN9l0oO9apKkfao3YIYq1w1GfqqOmfibDtcmLM&rsv_pq=bea8497c001164d2&rsv_sug3=21&rsv_sug1=16&rsv_sug7=100&rsv_sug2=0&rsv_sug4=3283");
+        }
+        function sneezeClick(){
+            window.open("https://www.baidu.com/s?wd=%E6%89%93%E5%96%B7%E5%9A%8F%E6%80%8E%E4%B9%88%E5%8A%9E&rsv_spt=1&rsv_iqid=0xa4999d2d001cbbe2&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=1&rsv_dl=tb&oq=%25E6%2589%2593%25E5%2596%25B7%25E5%259A%258F&inputT=1431&rsv_t=4d41IkM%2B9N%2BmXG%2BGDkKSJ%2FokSVz7uzyrSAjR1orgGiLbKRxZHz6gcQuh2WDHAwTT7Po4&rsv_pq=d431d56600010425&rsv_sug3=39&rsv_sug1=31&rsv_sug7=100&rsv_sug2=0&rsv_sug4=1620");
+        }
+        function screamClick(){
+            window.open("https://www.baidu.com/s?wd=%E6%8A%A5%E8%AD%A6%E7%94%B5%E8%AF%9D&rsv_spt=1&rsv_iqid=0x9baf6398001069d8&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&tn=baiduhome_pg&rsv_enter=1&rsv_dl=tb&rsv_sug3=20&rsv_sug1=20&rsv_sug7=100&rsv_sug2=0&inputT=4028&rsv_sug4=4383");
+        }
+        function Click(){
+            if( document.getElementById("btn").innerHTML=="start")
+            {
+                document.getElementById("cough").style.display="none";
+                document.getElementById("sneeze").style.display="none";
+                document.getElementById("scream").style.display="none";
+
+                dataset = [];
+                sum=0,cough_sum=0,sneeze_sum=0,scream_sum=0;
+                flag=true;
+                document.getElementById("btn").innerHTML="stop";
+                document.getElementById("left").src="大白左.gif";
+                document.getElementById("right").src="大白右.gif";
+                document.getElementById("tip").innerHTML="正在检测中..."
+                document.getElementById("tip").style.background="green";
+            }
+            else
+            {
+                flag=false;
+                document.getElementById("btn").innerHTML="start";
+                document.getElementById("left").src="大白左.jpg";
+                document.getElementById("right").src="大白右.jpg";
+                document.getElementById("tip").innerHTML="点击查看统计结果";
+                document.getElementById("tip").style.background="green";
+            }
+              
+        }
+        function resClick(){
+            if(flag==false)
+            {
+                document.getElementById("result").innerHTML="";
+                document.getElementById("page").style.display="none";
+                document.getElementById("result").style.display="block";
+                document.getElementById("back").style.display="block";
+
+                table = document.createElement("table");
+                tBody = document.createElement("tBody");
+                var len=dataset.length;
+
+                tr = tBody.insertRow(0);
+                td = tr.insertCell(0);
+                td.innerHTML = "时间"; 
+                td = tr.insertCell(1);
+                td.innerHTML = "类型"; 
+                td = tr.insertCell(2);
+                td.innerHTML = "咳嗽"; 
+                td = tr.insertCell(3);
+                td.innerHTML = "打喷嚏"; 
+                td = tr.insertCell(4);
+                td.innerHTML = "尖叫"; 
+                td = tr.insertCell(5);
+                td.innerHTML = "其他"; 
+
+                for(var i=1;i<=len;i++)
+                {
+                    tr = tBody.insertRow(i);
+                    td = tr.insertCell(0);
+                    td.innerHTML = new Date(parseInt(dataset[i-1].time) * 1000).toLocaleString().replace(/年|月/g, "-").replace(/日/g, " "); 
+                    td = tr.insertCell(1);
+                    td.innerHTML=dataset[i-1].class;
+                    td = tr.insertCell(2);
+                    td.innerHTML=dataset[i-1].scores.cough;
+                    td = tr.insertCell(3);
+                    td.innerHTML=dataset[i-1].scores.sneeze;
+                    td = tr.insertCell(4);
+                    td.innerHTML=dataset[i-1].scores.scream;
+                    td = tr.insertCell(5);
+                    td.innerHTML=dataset[i-1].scores.default;
+                }
+
+                tr = tBody.insertRow(len+1);
+                td = tr.insertCell(0);
+                td.innerHTML = "统计结果"; 
+                td = tr.insertCell(1);
+                td.innerHTML = "总样本："+sum; 
+                td = tr.insertCell(2);
+                td.innerHTML = "咳嗽："+cough_sum; 
+                td = tr.insertCell(3);
+                td.innerHTML = "打喷嚏："+sneeze_sum; 
+                td = tr.insertCell(4);
+                td.innerHTML = "尖叫："+scream_sum; 
+                td = tr.insertCell(5);
+                td.innerHTML = "其他："+(sum-cough_sum-sneeze_sum-scream_sum); 
+
+                table.appendChild(tBody);
+                document.getElementById("result").appendChild(table);
+            }
+            else    
+                return;
+        }
+        function back(){
+            document.getElementById("page").style.display="block";
+            document.getElementById("result").style.display="none";
+            document.getElementById("back").style.display="none";
+        }
+           
+        var ws = new WebSocket('ws://localhost:3368');
+
+        ws.onopen = function (evt) {
+            console.log("open",evt);
+            ws.send("hello");
+        };
+ 
+        //客户端收到服务端发来的消息时，会触发onmessage事件，参数evt.data中包含server传输过来的数据
+        ws.onmessage = function (evt) {
+            if(flag==false)
+            {
+                return;
+            }
+            sum++;
+            document.getElementById("tip").innerHTML="正在检测中..."
+            document.getElementById("tip").style.background="green";
+            var obj = JSON.parse(evt.data);
+            dataset.push(obj);
+            var maxscore = Math.max(obj.scores.cough,obj.scores.sneeze,obj.scores.scream);
+            if(maxscore<0.5)
+            {
+                return;
+            }
+            if(obj.class=="cough")
+            {
+                cough_sum++;
+                document.getElementById("tip").innerHTML="疑似咳嗽！";
+                document.getElementById("tip").style.background="orange";
+            }   
+            else if(obj.class=="sneeze")
+            {
+                sneeze_sum++;
+                document.getElementById("tip").innerHTML="疑似打喷嚏！";
+                document.getElementById("tip").style.background="orange";
+            }    
+            else if(obj.class=="scream")
+            {
+                scream_sum++;
+                document.getElementById("tip").innerHTML="疑似尖叫！";
+                document.getElementById("tip").style.background="orange";
+            }
+            
+            var len = dataset.length;
+            var cough_count=0,sneeze_count=0,scream_count=0;
+            var end = Math.min(len,50);
+            for(var i=0;i<end;i++)
+            {
+                if(dataset[len-1-i].class=="cough")
+                    cough_count++;
+                else if(dataset[len-1-i].class=="sneeze")
+                    sneeze_count++;
+                else if(dataset[len-1-i].class=="scream")
+                    scream_count++;
+            }
+            if(cough_count>=1)
+                document.getElementById("cough").style.display="block";
+            if(sneeze_count>=1)
+                document.getElementById("sneeze").style.display="block";
+            if(scream_count>=1)
+                document.getElementById("scream").style.display="block";
+        };
+ 
+        //客户端收到服务端发送的关闭连接的请求时，触发onclose事件
+        ws.onclose = function (evt) {
+            console.log("WebSocketClosed!");
+        };
+ 
+        //如果出现连接，处理，接收，发送数据失败的时候就会触发onerror事件
+        ws.onerror = function (evt) {
+            console.log("WebSocketError!");
+        };
+    </script>
+    </script>
+</body>
+</html>
