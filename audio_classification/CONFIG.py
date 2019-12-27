@@ -30,7 +30,11 @@ GLOBAL.DATA.MEL.SR = None         # 采样率
 
 ## ....类别 ##
 
-GLOBAL.DATA.CLASSES = 'ACCORDINGLY' # 类别。包括名称和权重，决定于训练集。
+GLOBAL.DATA.CLASSES = [           # 类别。包括名称和权重，决定于训练集。
+  ('cough', 4.), 
+  ('default', 1.),
+  ('scream', 10.),
+  ('sneeze', 10.)] 
 
 ## ..训练配置 ##
 
